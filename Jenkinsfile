@@ -20,7 +20,6 @@ pipeline {
         withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
           sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
             sh 'oc rollout latest django-psql-persistent'
-            sh 'oc rollout latest postgresql'
         }
       }
     }
