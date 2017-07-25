@@ -11,7 +11,7 @@ pipeline {
            }
            steps {
                withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
-               sh "oc login https://api.pro-us-east-1.openshift.com --token='${env.octoken}'"
+               sh "oc login https://api.pro-us-east-1.openshift.com --token=\'${env.octoken}\'"
                echo "building now....."
              }
            }
