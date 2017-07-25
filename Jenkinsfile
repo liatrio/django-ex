@@ -5,47 +5,30 @@ pipeline {
        stage('Build') {
            agent {
                docker {
-                   image 'maven:3.5.0'
-                   args '-e INITIAL_ADMIN_USER -e INITIAL_ADMIN_PASSWORD --network=${LDOP_NETWORK_NAME}'
-               }
-           }
-           steps {
-               configFileProvider(
-                       [configFile(fileId: 'nexus', variable: 'MAVEN_SETTINGS')]) {
-                   sh 'mvn -s $MAVEN_SETTINGS clean install -DskipTests=true -B'
-               }
-           }
-       }
-       stage('Deploy to Pivotal Development') {
-           agent {
-               docker {
-                   image 'liatrio/cf-cli'
+                   image 'openshiftdemos/oc'
                    args  '-u 0:0'
                }
            }
            steps {
-               withCredentials([usernamePassword(credentialsId: 'pivotal', passwordVariable: 'pivotalPASSWORD', usernameVariable: 'pivotalUSERNAME')]){
-                 sh "cf api https://api.run.pivotal.io && cf login -u ${env.pivotalUSERNAME} -p ${env.pivotalPASSWORD}"
-                 sh 'cf push -f ./base-manifest.yml'
-                 echo "Should be accessible at http://pivotal-dev.liatr.io"
-                 input 'Deploy to Pivotal Prod?'
+               withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
+               sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
+               echo "building now....."
+             }
+           }
+       }
+       stage('Deploy') {
+           agent {
+               docker {
+                   image 'openshiftdemos/oc'
+                   args  '-u 0:0'
+               }
+           }
+           steps {
+               withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
+               sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
+               sh 'oc deploy django-psql-persistent'
            }
          }
-       }
-       stage('Deploy to Pivotal Prod') {
-           agent {
-               docker {
-                   image 'liatrio/cf-cli'
-                   args  '-u 0:0'
-               }
-           }
-           steps {
-               withCredentials([usernamePassword(credentialsId: 'pivotal', passwordVariable: 'pivotalPASSWORD', usernameVariable: 'pivotalUSERNAME')]){
-                 sh "cf api https://api.run.pivotal.io && cf login -u ${env.pivotalUSERNAME} -p ${env.pivotalPASSWORD}"
-                 sh 'cf push -f ./prod-manifest.yml'
-                 echo "Should be accessible at http://pivotal-prod.liatr.io"
-        }
       }
-    }
   }
 }
