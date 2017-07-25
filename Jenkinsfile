@@ -1,34 +1,36 @@
 #!groovy
 pipeline {
-    agent none
-    stages {
-       stage('Build') {
-           agent {
-               docker {
-                   image 'widerin/openshift-cli'
-                   args  '-u 0:0'
-               }
-           }
-           steps {
-               withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
-               sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
-               echo "building now....."
-             }
-           }
-       }
-       stage('Deploy') {
-           agent {
-               docker {
-                   image 'widerin/openshift-cli'
-                   args  '-u 0:0'
-               }
-           }
-           steps {
-               withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
-               sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
-               sh 'oc deploy django-psql-persistent'
-           }
-         }
+  agent {
+    docker {
+      image 'widerin/openshift-cli'
+        args  '-u 0:0'
+    }
+  }
+  stages {
+    stage('Build') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
+          sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
+          sh 'oc start-build django-psql-persistent'
+        }
       }
+    }
+    stage('Verify Build') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
+          sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
+          echo "verified"
+        }
+      }
+    }
+    stage('Deploy Latest') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
+          sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
+          sh 'oc rollout latest django-psql-persistent'
+          sh 'oc rollout latest postgresql'
+        }
+      }
+    }
   }
 }
