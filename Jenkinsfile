@@ -7,19 +7,11 @@ pipeline {
     }
   }
   stages {
-    stage('Build') {
+    stage('Build and Deploy') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
           sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
-            sh 'oc start-build django-psql-persistent --wait'
-        }
-      }
-    }
-    stage('Deploy Latest') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
-          sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
-            sh 'oc rollout latest django-psql-persistent'
+          sh 'oc start-build django-psql-persistent --wait'
         }
       }
     }
