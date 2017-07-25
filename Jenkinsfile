@@ -5,7 +5,7 @@ pipeline {
        stage('Build') {
            agent {
                docker {
-                   image 'openshiftdemos/oc'
+                   image 'widerin/openshift-cli'
                    args  '-u 0:0'
                }
            }
@@ -19,7 +19,7 @@ pipeline {
        stage('Deploy') {
            agent {
                docker {
-                   image 'openshiftdemos/oc'
+                   image 'widerin/openshift-cli'
                    args  '-u 0:0'
                }
            }
