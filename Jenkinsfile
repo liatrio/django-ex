@@ -15,14 +15,6 @@ pipeline {
         }
       }
     }
-    stage('Verify Build') {
-      steps {
-        withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
-          sh "oc login https://api.pro-us-east-1.openshift.com --token=${env.octoken}"
-            echo "verified"
-        }
-      }
-    }
     stage('Deploy Latest') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'occli', passwordVariable: 'octoken', usernameVariable: 'ocproject')]){
